@@ -1,0 +1,42 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateKasKeluarsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('kas_keluars', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->unsignedBigInteger('id_akun_kas');
+            $table->unsignedBigInteger('id_akun_lawan');
+            $table->date('tanggal');
+            $table->string('nomor_referensi')->nullable();
+            $table->decimal('jumlah', 15, 2);
+            $table->text('keterangan')->nullable();
+            $table->timestamps();
+
+            // Menambahkan foreign key constraints
+            $table->foreign('id_akun_kas')->references('id')->on('akuns')->onDelete('restrict');
+            $table->foreign('id_akun_lawan')->references('id')->on('akuns')->onDelete('restrict');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('kas_keluars');
+    }
+}
