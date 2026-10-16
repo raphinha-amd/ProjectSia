@@ -43,23 +43,15 @@
                                 <p class="text-muted">Silakan masuk menggunakan akun Anda untuk melanjutkan.</p>
                             </div>
 
-                            <!-- Alert Error Contoh (Opsional jika login gagal) -->
-                            <!--
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                Email atau kata sandi salah.
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                            -->
-
-                            <form action="dashboard.html" method="GET">
+                            <form action="{{ route('auth.login.post') }}" method="POST">
+                                @csrf
                                 <div class="mb-3">
                                     <label for="email" class="form-label fw-semibold">Alamat Email</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-end-0"><i
                                                 class="bi bi-envelope text-muted"></i></span>
                                         <input type="email" class="form-control bg-light border-start-0 ps-0"
-                                            id="email" placeholder="nama@email.com" required
-                                            value="admin@kasapp.com">
+                                            id="email" placeholder="nama@email.com" name="email" required>
                                     </div>
                                 </div>
 
@@ -73,8 +65,7 @@
                                         <span class="input-group-text bg-light border-end-0"><i
                                                 class="bi bi-lock text-muted"></i></span>
                                         <input type="password" class="form-control bg-light border-start-0 ps-0"
-                                            id="password" placeholder="Masukkan kata sandi" required
-                                            value="password123">
+                                            name="password" id="password" placeholder="Masukkan kata sandi" required>
                                     </div>
                                 </div>
 

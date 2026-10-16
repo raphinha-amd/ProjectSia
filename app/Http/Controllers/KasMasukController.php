@@ -2,115 +2,117 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Akun;
+use App\Models\BukuBesar;
 use App\Models\KasMasuk;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class KasMasukController extends Controller
 {
-    public function index()
+    private function generateKodeReferensi($jenis)
     {
-        $kasMasuks = KasMasuk::with(['akunKas', 'akunLawan'])
-            // ->where('user_id', auth()->id())
-            ->latest('tanggal')
-            ->latest('id')
-            ->get();
-        $akunKas = Akun::where('tipe_akun', 'Aset')->orderBy('kode_akun')->get();
-        $akunLawan = Akun::whereIn('tipe_akun', ['Pendapatan', 'Kewajiban', 'Modal'])
-            ->orderBy('kode_akun')
-            ->get();
-        $title = 'Kas Masuk';
+        $prefix = $jenis === 'masuk' ? 'KM-' : 'KK-';
 
-        return view('kasMasuk.index', compact('title', 'kasMasuks', 'akunKas', 'akunLawan'));
+        $kodeTerakhir = DB::table('kas_masuks')
+            ->where('nomor_referensi', 'like', $prefix . '%')
+            ->orderByDesc('nomor_referensi')
+            ->limit(1)
+            ->value('nomor_referensi');
+
+        $nomor = $kodeTerakhir
+            ? (int) substr($kodeTerakhir, 3) + 1
+            : 1;
+
+        return $prefix . str_pad($nomor, 4, '0', STR_PAD_LEFT);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function index()
     {
-        $data = $this->validatedData($request);
+        $dataKasMasuk = KasMasuk::all();
+        $title = 'Kas Masuk';
+        return view('kasMasuk.index', compact('title', 'dataKasMasuk'));
+    }
 
-        DB::transaction(function () use ($data, $request) {
-            KasMasuk::create([
-                'user_id' => $request->user()->id ?? 1,
-                'id_akun_kas' => $data['id_akun_kas'],
-                'id_akun_lawan' => $data['id_akun_lawan'],
-                'tanggal' => $data['tanggal'],
-                'nomor_referensi' => $this->generateReference($data['tanggal']),
-                'jumlah' => $data['jumlah'],
-                'keterangan' => $data['keterangan'] ?? null,
+    public function create()
+    {
+        $kodeReferensi = $this->generateKodeReferensi('masuk');
+        $title = 'Tambah Kas Masuk';
+        return view('kasMasuk.create', compact('kodeReferensi', 'title'));
+    }
+
+    public function store(Request $request)
+    {
+        // Validate the request data
+        $validatedData = $request->validate([
+            'nomor_referensi' => 'required|string|max:255|unique:kas_masuks,nomor_referensi',
+            'tanggal' => 'required|date',
+            'keterangan' => 'nullable|string|max:255',
+            'jumlah' => 'required|numeric|min:0',
+        ]);
+
+        // Set user_id
+        $validatedData['user_id'] = 1; // atau Auth::id()
+
+        // Gunakan Database Transaction agar aman (jika satu gagal, semua dibatalkan)
+        DB::transaction(function () use ($validatedData) {
+            // 1. Simpan data ke tabel kas_masuks
+            $kasMasuk = KasMasuk::create($validatedData);
+
+            // 2. Ambil saldo terakhir dari buku besar
+            $lastBukuBesar = BukuBesar::latest('tanggal')->latest('id')->first();
+            $lastSaldo = $lastBukuBesar ? $lastBukuBesar->saldo : 0;
+
+            // Kas Masuk = Saldo Bertambah
+            $newSaldo = $lastSaldo + $kasMasuk->jumlah;
+
+            // 3. Simpan otomatis ke tabel buku_besars (Masuk = DEBIT)
+            BukuBesar::create([
+                'tanggal' => $kasMasuk->tanggal,
+                'nomor_referensi' => $kasMasuk->nomor_referensi,
+                'keterangan' => 'Kas Masuk: ' . ($kasMasuk->keterangan ?? '-'),
+                'debit' => $kasMasuk->jumlah,
+                'kredit' => 0,
+                'saldo' => $newSaldo,
             ]);
         });
 
-        return redirect()->route('kasmasuk.index')->with('success', 'Transaksi kas masuk berhasil disimpan.');
+        // Redirect to the index page with a success message
+        return redirect()->route('kasmasuk.index')->with('success', 'Kas Masuk berhasil ditambahkan.');
     }
 
-    public function update(Request $request, KasMasuk $kasMasuk): RedirectResponse
+    public function edit(KasMasuk $kasMasuk)
     {
-        // abort_unless($kasMasuk->user_id === $request->user()->id ? 1, 403);
-        $data = $this->validatedData($request);
+        return view('kasMasuk.edit', compact('kasMasuk'));
+    }
 
-        $kasMasuk->update([
-            'id_akun_kas' => $data['id_akun_kas'],
-            'id_akun_lawan' => $data['id_akun_lawan'],
-            'tanggal' => $data['tanggal'],
-            'jumlah' => $data['jumlah'],
-            'keterangan' => $data['keterangan'] ?? null,
+    public function update(Request $request, KasMasuk $kasMasuk)
+    {
+        // Validate the request data
+        $validatedData = $request->validate([
+            'nomor_referensi' => 'required|string|max:255',
+            'tanggal' => 'required|date',
+            'keterangan' => 'nullable|string|max:255',
+            'jumlah' => 'required|numeric|min:0',
         ]);
 
-        return redirect()->route('kasmasuk.index')->with('success', 'Transaksi kas masuk berhasil diperbarui.');
+        // Update the KasMasuk record
+        $kasMasuk->update($validatedData);
+
+        // Redirect to the index page with a success message
+        return redirect()->route('kasmasuk.index')->with('success', 'Kas Masuk berhasil diperbarui.');
     }
 
-    public function destroy(KasMasuk $kasMasuk): RedirectResponse
+    public function destroy(kasMasuk $kasMasuk)
     {
-        abort_unless($kasMasuk->user_id === auth()->id(), 403);
-        $kasMasuk->delete();
+        DB::transaction(function () use ($kasMasuk) {
+            // 1. Hapus data di buku besar yang nomor referensinya sama
+            BukuBesar::where('nomor_referensi', $kasMasuk->nomor_referensi)->delete();
 
-        return redirect()->route('kasmasuk.index')->with('success', 'Transaksi kas masuk berhasil dihapus.');
-    }
+            // 2. Hapus data kas masuk
+            $kasMasuk->delete();
 
-    private function validatedData(Request $request): array
-    {
-        $data = $request->validate([
-            'tanggal' => ['required', 'date'],
-            'id_akun_kas' => ['required', 'integer', 'exists:akuns,id'],
-            'id_akun_lawan' => ['required', 'integer', 'exists:akuns,id', 'different:id_akun_kas'],
-            'jumlah' => ['required', 'numeric', 'gt:0', 'max:9999999999999.99'],
-            'keterangan' => ['nullable', 'string', 'max:65535'],
-        ]);
-
-        $accounts = Akun::whereIn('id', [$data['id_akun_kas'], $data['id_akun_lawan']])
-            ->get()
-            ->keyBy('id');
-
-        if (!$accounts->has((int) $data['id_akun_kas'])
-            || $accounts[(int) $data['id_akun_kas']]->tipe_akun !== 'Aset') {
-            throw ValidationException::withMessages([
-                'id_akun_kas' => 'Akun kas harus merupakan akun bertipe Aset.',
-            ]);
-        }
-
-        if (!$accounts->has((int) $data['id_akun_lawan'])
-            || !in_array($accounts[(int) $data['id_akun_lawan']]->tipe_akun, ['Pendapatan', 'Kewajiban', 'Modal'], true)) {
-            throw ValidationException::withMessages([
-                'id_akun_lawan' => 'Akun lawan harus bertipe Pendapatan, Kewajiban, atau Modal.',
-            ]);
-        }
-
-        return $data;
-    }
-
-    private function generateReference(string $date): string
-    {
-        $prefix = 'KM-' . date('Y', strtotime($date)) . '-';
-        $references = KasMasuk::where('nomor_referensi', 'like', $prefix . '%')
-            ->lockForUpdate()
-            ->pluck('nomor_referensi');
-        $sequence = $references->max(function (string $reference) use ($prefix): int {
-            return (int) substr($reference, strlen($prefix));
-        }) + 1;
-
-        return $prefix . str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+            // (Opsional) Di sini Anda juga bisa memanggil fungsi untuk merapikan/menghitung ulang saldo buku besar jika diperlukan.
+        });
+        return back()->with('success', 'Kas Masuk berhasil dihapus.');
     }
 }

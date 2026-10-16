@@ -11,31 +11,26 @@
              </li>
 
              <li class="nav-item mb-2">
-                 <a href="{{ route('akun.index') }}"
-                     class="nav-link {{ request()->routeIs('akun.*') ? 'active text-white' : 'text-white-50' }}"
-                     @if (request()->routeIs('akun.*')) aria-current="page" @endif>
-                     <i class="bi bi-safe me-2"></i> Akun
-                 </a>
-             </li>
-
-             <li class="nav-item mb-2">
-                 <a href="{{ route('kasmasuk.index') }}" class="nav-link {{ request()->routeIs('kasmasuk.*') ? 'active text-white' : 'text-white-50' }}">
+                 <a href="{{ route('kasmasuk.index') }}"
+                     class="nav-link {{ request()->routeIs('kasmasuk.*') ? 'active text-white' : 'text-white-50' }}">
                      <i class="bi bi-arrow-down-circle me-2 text-success"></i> Kas Masuk
                  </a>
              </li>
              <li class="nav-item mb-2">
-                 <a href="#" class="nav-link text-white-50">
+                 <a href="{{ route('kaskeluar.index') }}"
+                     class="nav-link {{ request()->routeIs('kaskeluar.*') ? 'active text-white' : 'text-white-50' }}">
                      <i class="bi bi-arrow-up-circle me-2 text-danger"></i> Kas Keluar
                  </a>
              </li>
              <li class="nav-item mb-2">
-                 <a href="#" class="nav-link text-white-50">
+                 <a href="{{ route('bukubesar.index') }}"
+                     class="nav-link nav-link {{ request()->routeIs('bukubesar.*') ? 'active text-white' : 'text-white-50' }}">
                      <i class="bi bi-journals me-2"></i> Buku Besar
                  </a>
              </li>
              <hr>
              <li class="nav-item mb-2">
-                 <a href="#" class="nav-link text-white-50">
+                 <a href="/logout" class="nav-link text-white-50">
                      <i class="bi bi-box-arrow-left me-2 text-danger"></i> Logout
                  </a>
              </li>

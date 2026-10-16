@@ -9,6 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('asset/datatables.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('asset/sweetalert2.min.css') }}">
 </head>
 
 <body>
@@ -30,10 +32,26 @@
             </main>
         </div>
     </div>
-
+    <script src="{{ asset('asset/jquery.min.js') }}"></script>
+    <script src="{{ asset('asset/datatables.min.js') }}"></script>
+    <script src="{{ asset('asset/sweetalert2.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('table').DataTable();
+        })
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous">
     </script>
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                title: 'sukses',
+                text: "{{ session('success') }}",
+                icon: 'success'
+            })
+        </script>
+    @endif
 </body>
 
 </html>

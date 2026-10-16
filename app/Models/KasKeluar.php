@@ -13,16 +13,6 @@ class KasKeluar extends Model
     protected $guarded = ['id'];
     protected $table = 'kas_keluars';
 
-    public function akunKas()
-    {
-        return $this->belongsTo(Akun::class, 'id_akun_kas');
-    }
-
-    public function akunLawan()
-    {
-        return $this->belongsTo(Akun::class, 'id_akun_lawan');
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);

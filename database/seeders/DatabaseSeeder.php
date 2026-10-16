@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Database\Seeders\AkunSeeder;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -14,9 +14,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::factory(10)->create();
-        $this->call([
-            AkunSeeder::class,
+        User::create([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password'),
         ]);
     }
 }

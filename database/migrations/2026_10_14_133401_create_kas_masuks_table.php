@@ -16,17 +16,11 @@ class CreateKasMasuksTable extends Migration
         Schema::create('kas_masuks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->unsignedBigInteger('id_akun_kas');
-            $table->unsignedBigInteger('id_akun_lawan');
             $table->date('tanggal');
             $table->string('nomor_referensi')->unique();
             $table->decimal('jumlah', 15, 2);
             $table->text('keterangan')->nullable();
             $table->timestamps();
-
-            // Menambahkan foreign key constraints
-            $table->foreign('id_akun_kas')->references('id')->on('akuns')->onDelete('restrict');
-            $table->foreign('id_akun_lawan')->references('id')->on('akuns')->onDelete('restrict');
         });
     }
 
