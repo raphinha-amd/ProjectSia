@@ -27,12 +27,14 @@ Sebelum melakukan *clone*, pastikan perangkat Anda telah terinstal:
 
 Ikuti langkah-langkah berikut untuk menjalankan proyek ini di komputer lokal Anda:
 
-### 1. Clone Repository
+### 1. Clone Repository / download zip
 Buka terminal atau command prompt, lalu jalankan perintah berikut untuk mengunduh proyek dari GitHub:
 ```bash
 git clone https://github.com/username-anda/nama-repository.git
 ```
 *(Catatan: Ganti URL di atas dengan link repository GitHub Anda yang sebenarnya)*
+
+atau download zip nya
 
 ### 2. Masuk ke Direktori Proyek
 ```bash
