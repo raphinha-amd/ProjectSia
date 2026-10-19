@@ -30,7 +30,7 @@ Ikuti langkah-langkah berikut untuk menjalankan proyek ini di komputer lokal And
 ### 1. Clone Repository / download zip
 Buka terminal atau command prompt, lalu jalankan perintah berikut untuk mengunduh proyek dari GitHub:
 ```bash
-git clone https://github.com/username-anda/nama-repository.git
+git clone https://github.com/raphinha-amd/ProjectSia.git
 ```
 *(Catatan: Ganti URL di atas dengan link repository GitHub Anda yang sebenarnya)*
 
