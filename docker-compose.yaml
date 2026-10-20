@@ -1,0 +1,54 @@
+services:
+  mysql:
+    restart: always
+    container_name: project_sia.mysql.local
+    image: mysql:8.2
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: project_sia
+    volumes:
+      - 'mysql:/var/lib/mysql'
+    networks:
+      - project_sia
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
+      retries: 3
+      timeout: 5s
+
+  redis:
+    restart: always
+    container_name: project_sia.redis.local
+    image: redis:6.0
+    networks:
+      - project_sia
+    volumes:
+      - 'redis:/data'
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+
+  web:
+    restart: always
+    container_name: project_sia.web.local
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+#    image: ${DOCKER_REGISTRY}/web:${IMAGE_VERSION}
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "${DOCKER_PORT:-127.0.0.1:8000}:8000"
+    volumes:
+      - ".:/opt/apps/project_sia"
+    depends_on:
+      - mysql
+    networks:
+      - project_sia
+networks:
+  project_sia:
+    name: project_sia.local
+    driver: bridge
+
+volumes:
+  mysql:
+    name: project_sia.mysql.local
+  redis:
+    name: project_sia.redis.local
